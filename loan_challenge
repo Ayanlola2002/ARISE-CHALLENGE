@@ -1,0 +1,255 @@
+
+
+--------------
+
+Step 1 (this step does not have an answer in the answer form)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+import the Pandas package. You will need to install the package
+if you do not already have them
+(``hint - google anaconda install pandas``).
+
+.. code:: ipython2
+
+
+    import pandas as pd
+
+--------------
+
+Step 2 (this step does not have an answer in the answer form)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use Pandas to read in the csv titled ``application_data.csv`` as a
+Panda's dataframe. Once you have read in the data as a dataframe use
+Panda's ``head()`` function to show an overview of the data.
+
+
+    csv_data = pd.read_csv('application_data.csv')
+    print(csv_data.head())
+
+
+.. parsed-literal::
+
+      customerID        loanId appilcationDate  LoanNumber  LoanAmount  \
+    0  839247458  302953235622      2018-12-21           1      7500.0   
+    1  217540860  302960101337      2018-12-23           1      7500.0   
+    2  522238092  303016988846      2019-01-08           1      7500.0   
+    3  096754469  302999605504      2019-01-04           1      7500.0   
+    4  410354345  302951945878      2018-12-21           1      7500.0   
+    
+       InterestRate  TermDays repaymentDueDate repaymentPaidDate  
+    0          30.0        30       2019-01-20        2019-01-16  
+    1          30.0        30       2019-01-22        2018-12-29  
+    2          30.0        30       2019-02-07        2019-01-08  
+    3          30.0        30       2019-02-03        2019-01-08  
+    4          30.0        30       2019-01-20        2019-01-17  
+
+
+You should now be able to see that the dataset contains information
+relating to loans that have been disbursed. Each row of the data is
+specific to a particular loan and displays the customer's ID that took
+out the loan, a unique loan ID, the date when the client applied for the
+loan, the loan number of the specific loan (how many loans the client
+has now taken out), the amount, interest rate, term days, the date when
+the loan repayment was due and the date the loan was actually repaid.
+
+--------------
+~~~~~~~~~~
+
+Convert ``appilcationDate``, ``repaymentDueDate`` and
+``repaymentPaidDate`` in the dataframes to datetimes.
+
+.. code:: ipython2
+
+    # convert to dates
+    csv_data.loc[:, ['appilcationDate', 'repaymentDueDate', 'repaymentPaidDate']] = csv_data.loc[:, ['appilcationDate', 'repaymentDueDate', 'repaymentPaidDate']].apply(pd.to_datetime, errors='coerce')
+
+Now that the dates have been converted, How many ``unique``\ data types
+are contained within the application dataset?
+
+.. code:: ipython2
+
+    # data types
+    print(csv_data.appilcationDate.nunique())
+
+
+.. parsed-literal::
+
+    254
+
+
+Question 2
+~~~~~~~~~~ the ``average`` loan amount, interest rate and termdays
+for all the loans in the dataset? 
+places.
+
+.. code:: ipython2
+
+    # 2a avg loan amount
+    print(round(csv_data.LoanAmount.mean(),2))
+
+
+.. parsed-literal::
+
+    13828.08
+
+
+.. code:: ipython2
+
+    # 2b avg interest rate
+    print(round(csv_data.InterestRate.mean(),2))
+
+
+
+.. parsed-literal::
+
+    23.06
+
+
+.. code:: ipython2
+
+    # 2c avg term days 
+    print(round(csv_data.TermDays.mean(),2))
+
+
+.. parsed-literal::
+
+    42.08
+
+
+--------------
+
+Question 3
+~~~~~~~~~~
+
+ create a new column called ``dateDifference`` which needs to
+contains the number of days between when the loan was repaid and when it
+was due to be repaid.
+
+Count the number of loans that were paid more than 3 days late. This can
+be done by first creating a dataframe only containing the loans that
+were paid more than 3 days late.
+
+.. code:: ipython2
+
+    # number of loans more than 3 days late
+    csv_data['dateDifference'] = csv_data['repaymentPaidDate'] - csv_data['repaymentDueDate']
+    csv_data[csv_data['dateDifference'] > '3 days']['customerID'].count()
+
+
+
+
+.. parsed-literal::
+
+    145
+
+
+
+--------------
+
+Question 4
+~~~~~~~~~~
+
+group the dataset by ``TermDays`` and calculate the ``mean`` loan
+amount and the ``standard deviation`` of loan amount within each term.
+
+What is the mean loan amount in 30-day loans and what is the standard
+deviation of loan amount in 90-day loans? Please give your answers to
+the nearest two decimal places.
+
+.. code:: ipython2
+
+    # mean loan amount in 30-day loans and standard deviation of loan amount in 90-day loans
+    #csv_data.groupby('TermDays').mean()
+    loan_amount_mean = csv_data.groupby('TermDays')['LoanAmount'].mean()
+    loan_amount_std = csv_data.groupby('TermDays')['LoanAmount'].std()
+    
+    print(loan_amount_mean.loc[30].round(2))
+    print(loan_amount_std.loc[90].round(2))
+
+
+.. parsed-literal::
+
+    7941.96
+    18050.14
+
+
+--------------
+
+Question 5
+~~~~~~~~~~
+
+``Late`` loans are defined as loans that were paid ``more than 3 days``
+after their due date. Please find the average number of days that these
+loans were paid beyond their due date for each ``week of the year``.
+This will require you to break all ``appilcationDate's`` down into the
+week of the year they were made and then perform a group by.
+
+What is the average number of days that ``late`` loans applied for in
+the second week of the year were paid late? Please sumbit your answer
+rounded to two decimal places.
+
+.. code:: ipython2
+
+    import numpy as np
+    # week of year and average number of late days
+    csv_data['weekNumber'] = csv_data['appilcationDate'].dt.week
+    csv_data['dateDifferenceNumber'] = csv_data.dateDifference.astype(np.int64)
+    result = csv_data[csv_data.dateDifference > '3 days'].loc[:, ['weekNumber', 'dateDifferenceNumber']]
+    week_number_means = result.groupby('weekNumber').mean()
+    week_number_means['dateDifferenceNumber'] = pd.to_timedelta(week_number_means['dateDifferenceNumber'])
+    print(week_number_means)
+
+
+.. parsed-literal::
+
+                  dateDifferenceNumber
+    weekNumber                        
+    1                 87 days 14:24:00
+    2                 45 days 18:00:00
+    3                 16 days 12:00:00
+    4                 37 days 22:00:00
+    5                 18 days 00:00:00
+    6          39 days 17:08:34.285714
+    7                 29 days 06:00:00
+    8          25 days 03:41:32.307692
+    9          55 days 20:34:17.142857
+    10                29 days 06:00:00
+    11                71 days 12:00:00
+    12                19 days 12:00:00
+    13                34 days 00:00:00
+    14                14 days 00:00:00
+    15                 7 days 00:00:00
+    17                34 days 12:00:00
+    19                66 days 12:00:00
+    20                28 days 00:00:00
+    21                10 days 00:00:00
+    22                88 days 00:00:00
+    23                11 days 00:00:00
+    24                36 days 00:00:00
+    26                27 days 08:00:00
+    27                 4 days 00:00:00
+    28                 7 days 00:00:00
+    29                69 days 00:00:00
+    30                65 days 00:00:00
+    31               108 days 00:00:00
+    32                15 days 12:00:00
+    33                30 days 00:00:00
+    34                14 days 00:00:00
+    35                 4 days 00:00:00
+    36                39 days 08:00:00
+    37                17 days 04:48:00
+    38                60 days 00:00:00
+    39                 9 days 00:00:00
+    40                 9 days 00:00:00
+    41                 8 days 00:00:00
+    42                20 days 00:00:00
+    44                 9 days 00:00:00
+    45                 6 days 00:00:00
+    48                18 days 00:00:00
+
+
+--------------
+
+The End
+~~~~~~~
